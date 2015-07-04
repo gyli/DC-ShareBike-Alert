@@ -188,9 +188,3 @@ class BikeShareDC:
         s.enter(60, 1, self._run_alert, (s, conf, alert_log))
         s.run()
         print('Alert is setted.')
-
-
-test = BikeShareDC()
-test.get_station('320 23rd st, arlington')
-test.get_station_info(31401)
-test.set_alert()
