@@ -1,0 +1,22 @@
+{
+  "jobs": [
+    {
+      "Start": "00:00:00",
+      "End": "23:59:59",
+      "StationID": "31011",
+      "BikeLessThan": 1,
+      "DockLessThan": 0
+    },
+    {
+      "Start": "00:00:00",
+      "End": "23:59:59",
+      "StationID": "31012",
+      "BikeLessThan": 1,
+      "DockLessThan": 0
+    }
+  ],
+  "email_from_address": "alert_from@example.com",
+  "email_from_password": "email_from_password",
+  "email_from_server": "smtp.example.com",
+  "email_to_address": "alert_to@example.com"
+}
