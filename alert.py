@@ -22,9 +22,10 @@ import time
 
 
 class BikeShareDC:
+    BIKESHARE_URL = 'http://www.capitalbikeshare.com/data/stations/bikeStations.xml'
+
     def __init__(self):
-        # TODO: update bike_info for every minute
-        self.station_info = self.bikeparser(url='http://www.capitalbikeshare.com/data/stations/bikeStations.xml')
+        self.station_info = self.bikeparser(url=self.BIKESHARE_URL)
 
     @staticmethod
     def bikeparser(url):
@@ -97,6 +98,9 @@ class BikeShareDC:
         conf = self.read_conf()
         job_options = [u'Start', u'StationID', u'BikeLessThan', u'End', u'DockLessThan']
 
+        # Refresh the station info
+        self.station_info = self.bikeparser(url=self.BIKESHARE_URL)
+
         for job in conf.get('jobs'):
             # Config checking
             for job_option in job_options:
@@ -119,6 +123,7 @@ class BikeShareDC:
                 end_time += timedelta(days=1)
 
             if start_time <= now <= end_time:
+                # TODO: stop the task
                 if int(job.get('BikeLessThan')) and int(this_station_info.get('nbBikes')) < int(job.get('BikeLessThan')):
                     self._send_alert(
                         conf.get('email_from_address'),
