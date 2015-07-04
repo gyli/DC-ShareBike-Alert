@@ -2,15 +2,17 @@
 
 ShareBikeAlert is a Python script tool providing DC Sharebike data entrance and alert.
 
+It happens sometimes that I want to find a dock for my share bike while the station is full, or the opposite that there's no bike when I get to the station. So there's ShareBikeAlert. It will send you an email or SMS if there's no bike/dock in your station during your chosen time frame.
+
 # Usage
 
-Retrive closest bike station:
+Retrieve closest bike station:
 ```
 bike = BikeShareDC()
 bike.get_station('1600 pennsylvania ave NW, washington, DC')
 ```
 
-Retrive station data:
+Retrieve station data:
 ```
 bike.get_station_info(31011)
 ```
@@ -35,3 +37,5 @@ Call the class and run.
 ```
 bike.set_alert()
 ```
+
+Setting up a cron job to run the alert regularly.
