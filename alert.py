@@ -12,13 +12,13 @@ if is_py2:
 elif is_py3:
     from urllib.request import urlopen, Request
     from urllib.parse import urlencode
+from datetime import datetime, timedelta
 import json
 import math
-import smtplib
-from datetime import datetime, timedelta
-import xml.etree.ElementTree as ET
 import sched
+import smtplib
 import time
+import xml.etree.ElementTree as ET
 
 
 class BikeShareDC:
@@ -29,6 +29,9 @@ class BikeShareDC:
 
     @staticmethod
     def bikeparser(url):
+        """
+        Convert source data into dict
+        """
         tree = ET.ElementTree(file=urlopen(url))
         root = tree.getroot()
         return [{x.tag: x.text for x in station.findall('./*')} for station in root]
@@ -63,6 +66,11 @@ class BikeShareDC:
         return math.hypot(float(lat1) - float(lat2), float(long1) - float(long2))
 
     def get_station(self, address, limit=1):
+        """
+        Search the closest bike station
+        :param address: the input address as query
+        :param limit: the number of stations in return
+        """
         # https://secure.capitalbikeshare.com/map/
         coordinate = self.get_coordinates(address)
         self.station_info.sort(
@@ -98,7 +106,6 @@ class BikeShareDC:
 
         # Send email
         senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
-        subject = "Your job has completed"
         m = "Date: %s\r\nFrom: %s\r\nTo: %s\r\nSubject: %s\r\nX-Mailer: My-Mail\r\n\r\n" % (
             senddate, from_addr, to_addr, subject)
         server.sendmail(from_addr, to_addr, m + content)
@@ -179,9 +186,13 @@ class BikeShareDC:
                     )
                     alert_log[this_station_info.get('ID') + '_dock'] = 1
 
+        # Rerun the function every minute
         schedule.enter(60, 1, self._run_alert, (schedule, conf, alert_log))
 
     def set_alert(self):
+        """
+        Entrance function of setting alerts.
+        """
         conf = self.read_conf()
         alert_log = {}
         s = sched.scheduler(time.time, time.sleep)
