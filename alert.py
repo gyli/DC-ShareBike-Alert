@@ -92,10 +92,20 @@ class BikeShareDC:
 
     @staticmethod
     def _send_alert(from_addr, from_psw, from_server, to_addr, subject, content):
-        pass
+        server = smtplib.SMTP(from_server + ':587')
+        server.starttls()
+        server.login(from_addr, from_psw)
 
-    def _run_alert(self, schedule):
-        conf = self.read_conf()
+        # Send email
+        senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
+        subject = "Your job has completed"
+        m = "Date: %s\r\nFrom: %s\r\nTo: %s\r\nSubject: %s\r\nX-Mailer: My-Mail\r\n\r\n" % (
+            senddate, from_addr, to_addr, subject)
+        server.sendmail(from_addr, to_addr, m + content)
+        server.quit()
+
+    def _run_alert(self, schedule, conf, alert_log):
+
         job_options = [u'Start', u'StationID', u'BikeLessThan', u'End', u'DockLessThan']
 
         # Refresh the station info
@@ -123,8 +133,7 @@ class BikeShareDC:
                 end_time += timedelta(days=1)
 
             if start_time <= now <= end_time:
-                # TODO: stop the task
-                if int(job.get('BikeLessThan')) and int(this_station_info.get('nbBikes')) < int(job.get('BikeLessThan')):
+                if int(job.get('BikeLessThan')) and int(this_station_info.get('nbBikes')) < int(job.get('BikeLessThan')) and not alert_log[this_station_info.get('ID') + '_bike']:
                     self._send_alert(
                         conf.get('email_from_address'),
                         conf.get('email_from_password'),
@@ -145,7 +154,9 @@ class BikeShareDC:
                                            '%Y-%m-%d %H:%M:%S')
                                        )
                     )
-                if int(job.get('DockLessThan')) and int(this_station_info.get('nbEmptyDocks')) < int(job.get('DockLessThan')):
+                    # One email for one alert only
+                    alert_log[this_station_info.get('ID') + '_bike'] = 1
+                if int(job.get('DockLessThan')) and int(this_station_info.get('nbEmptyDocks')) < int(job.get('DockLessThan')) and not alert_log[this_station_info.get('ID') + '_dock']:
                     self._send_alert(
                         conf.get('email_from_address'),
                         conf.get('email_from_password'),
@@ -166,12 +177,15 @@ class BikeShareDC:
                                            '%Y-%m-%d %H:%M:%S')
                                        )
                     )
+                    alert_log[this_station_info.get('ID') + '_dock'] = 1
 
-        schedule.enter(60, 1, self._run_alert, (schedule, ))
+        schedule.enter(60, 1, self._run_alert, (schedule, conf, alert_log))
 
     def set_alert(self):
+        conf = self.read_conf()
+        alert_log = {}
         s = sched.scheduler(time.time, time.sleep)
-        s.enter(60, 1, self._run_alert, (s, ))
+        s.enter(60, 1, self._run_alert, (s, conf, alert_log))
         s.run()
         print('Alert is setted.')
 
