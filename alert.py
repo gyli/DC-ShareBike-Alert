@@ -111,7 +111,7 @@ class BikeShareDC:
         server.sendmail(from_addr, to_addr, m + content)
         server.quit()
 
-    def _run_alert(self, schedule, conf, alert_log):
+    def _run_alert(self, schedule, conf, alert_log, overtime_log):
 
         job_options = [u'Start', u'StationID', u'BikeLessThan', u'End', u'DockLessThan']
 
@@ -139,7 +139,7 @@ class BikeShareDC:
             if end < start:
                 end_time += timedelta(days=1)
 
-            if start_time <= now <= end_time:
+            if start_time <= now <= end_time and alert_log[this_station_info.get('ID') + '_overtime'] != 1:
                 if int(job.get('BikeLessThan')) and int(this_station_info.get('nbBikes')) < int(job.get('BikeLessThan')) and not alert_log[this_station_info.get('ID') + '_bike']:
                     self._send_alert(
                         conf.get('email_from_address'),
@@ -185,9 +185,12 @@ class BikeShareDC:
                                        )
                     )
                     alert_log[this_station_info.get('ID') + '_dock'] = 1
+            else:
+                overtime_log[this_station_info.get('ID')] = 1
 
         # Rerun the function every minute
-        schedule.enter(60, 1, self._run_alert, (schedule, conf, alert_log))
+        if sum(overtime_log.itervalues()) < len(conf.get('jobs')):  # if all alert sent, stop the task
+            schedule.enter(60, 1, self._run_alert, (schedule, conf, alert_log, overtime_log))
 
     def set_alert(self):
         """
@@ -195,7 +198,8 @@ class BikeShareDC:
         """
         conf = self.read_conf()
         alert_log = {}
+        overtime_log = {}
         s = sched.scheduler(time.time, time.sleep)
-        s.enter(60, 1, self._run_alert, (s, conf, alert_log))
+        s.enter(60, 1, self._run_alert, (s, conf, alert_log, overtime_log))
         s.run()
         print('Alert is setted.')
