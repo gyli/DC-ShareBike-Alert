@@ -30,7 +30,7 @@ Using `get_station()` and `get_station_info()` functions to get the station ID, 
       "BikeLessThan": 1,
       "DockLessThan": 0
     }
-}
+]
 ```
 
 Call the class and run.
